@@ -208,10 +208,20 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-base-200 dark:bg-dark-base-200 text-base-content dark:text-dark-base-content font-sans">
+    <div className="min-h-screen relative text-white font-sans">
       <Header />
-      <main className="container mx-auto p-4 md:p-6 lg:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <main className="container mx-auto px-6 lg:px-12 py-8 relative z-10">
+        <div className="mb-12 text-center">
+          <h1 className="text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+            Real-time audio description,
+            <span className="text-gray-500"> one session away.</span>
+          </h1>
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+            Transform live events into accessible experiences with AI-powered audio descriptions
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           <div className="lg:col-span-1">
             <Controls
               eventType={eventType}

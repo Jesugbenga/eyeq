@@ -14,7 +14,7 @@ const TranscriptItemView: React.FC<{ item: TranscriptItem }> = ({ item }) => {
   if (isError) {
     return (
         <div className="text-center my-4">
-            <p className="text-sm bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-4 py-2 rounded-lg">
+            <p className="text-sm glass text-red-400 px-4 py-3 rounded-xl border border-red-500/30">
                 {item.text}
             </p>
         </div>
@@ -22,12 +22,28 @@ const TranscriptItemView: React.FC<{ item: TranscriptItem }> = ({ item }) => {
   }
 
   return (
-    <div className={`flex items-start space-x-4 my-4 ${isDescription ? 'justify-start' : 'justify-start'}`}>
-      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${isDescription ? 'bg-brand-secondary text-white' : 'bg-base-300 dark:bg-dark-base-100'}`}>
-        {isDescription ? <SparklesIcon className="w-6 h-6" /> : <UserIcon className="w-6 h-6" />}
+    <div className={`flex items-start space-x-3 my-3 ${isDescription ? 'justify-start' : 'justify-start'}`}>
+      <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
+        isDescription 
+          ? 'bg-gradient-to-br from-glow-orange to-glow-orange-dark' 
+          : 'glass border border-white/10'
+      }`}>
+        {isDescription ? (
+          <SparklesIcon className="w-4 h-4 text-white" />
+        ) : (
+          <UserIcon className="w-4 h-4 text-gray-400" />
+        )}
       </div>
-      <div className={`p-4 rounded-lg max-w-xl ${isDescription ? 'bg-brand-secondary/10 dark:bg-brand-secondary/20' : 'bg-base-100 dark:bg-dark-base-300'}`}>
-        <p className={`text-base-content dark:text-dark-base-content`}>{item.text}</p>
+      <div className={`flex-1 p-3 rounded-xl max-w-2xl ${
+        isDescription 
+          ? 'glass border border-glow-orange/20' 
+          : 'glass border border-white/5'
+      }`}>
+        <p className={`text-sm leading-relaxed ${
+          isDescription ? 'text-white' : 'text-gray-300'
+        }`}>
+          {item.text}
+        </p>
       </div>
     </div>
   );
@@ -42,17 +58,33 @@ export const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({ transcript
     }, [transcript]);
 
     return (
-        <div className="bg-base-100 dark:bg-dark-base-300 p-4 rounded-2xl shadow-lg h-[calc(100vh-10rem)] flex flex-col">
-            <h2 className="text-xl font-bold mb-4 px-2">Live Feed</h2>
-            <div className="flex-grow overflow-y-auto pr-2">
+        <div className="relative z-10 glass rounded-2xl p-6 h-[calc(100vh-12rem)] flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold text-white">Live Feed</h2>
+                {transcript.length > 0 && (
+                    <span className="text-xs text-gray-400 font-medium">
+                        {transcript.length} {transcript.length === 1 ? 'item' : 'items'}
+                    </span>
+                )}
+            </div>
+            <div className="flex-grow overflow-y-auto pr-2 custom-scrollbar">
                 {transcript.length === 0 ? (
                     <div className="flex items-center justify-center h-full">
-                        <p className="text-base-content-secondary dark:text-dark-base-content-secondary">
-                            Start a session to see the live transcript and descriptions.
-                        </p>
+                        <div className="text-center">
+                            <div className="w-16 h-16 mx-auto mb-4 glass rounded-full flex items-center justify-center border border-white/10">
+                                <SparklesIcon className="w-8 h-8 text-gray-500" />
+                            </div>
+                            <p className="text-gray-400 text-sm">
+                                Start a session to see the live transcript and descriptions.
+                            </p>
+                        </div>
                     </div>
                 ) : (
-                    transcript.map((item, index) => <TranscriptItemView key={index} item={item} />)
+                    <div className="space-y-1">
+                        {transcript.map((item, index) => (
+                            <TranscriptItemView key={index} item={item} />
+                        ))}
+                    </div>
                 )}
                 <div ref={endOfMessagesRef} />
             </div>

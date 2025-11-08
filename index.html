@@ -12,24 +12,122 @@
         theme: {
           extend: {
             colors: {
-              'brand-primary': '#007aff',
-              'brand-secondary': '#34c759',
-              'base-100': '#ffffff',
-              'base-200': '#f2f2f7',
-              'base-300': '#e5e5ea',
-              'base-content': '#000000',
-              'base-content-secondary': '#6b7280',
-
-              'dark-base-100': '#1c1c1e',
-              'dark-base-200': '#2c2c2e',
-              'dark-base-300': '#3a3a3c',
-              'dark-base-content': '#ffffff',
-              'dark-base-content-secondary': '#9ca3af',
+              'cosmic-blue': '#0a0e27',
+              'cosmic-dark': '#050812',
+              'cosmic-purple': '#1a1f3a',
+              'glow-orange': '#ff6b35',
+              'glow-orange-dark': '#d45a2a',
             },
           },
         },
       }
     </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      
+      * {
+        font-family: 'Inter', sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #050812 0%, #0a0e27 50%, #1a1f3a 100%);
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      /* Starry background */
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+          radial-gradient(2px 2px at 20% 30%, white, transparent),
+          radial-gradient(2px 2px at 60% 70%, white, transparent),
+          radial-gradient(1px 1px at 50% 50%, white, transparent),
+          radial-gradient(1px 1px at 80% 10%, white, transparent),
+          radial-gradient(2px 2px at 90% 40%, white, transparent),
+          radial-gradient(1px 1px at 33% 60%, white, transparent),
+          radial-gradient(1px 1px at 55% 80%, white, transparent),
+          radial-gradient(2px 2px at 10% 90%, white, transparent),
+          radial-gradient(1px 1px at 70% 20%, white, transparent),
+          radial-gradient(1px 1px at 40% 50%, white, transparent);
+        background-repeat: repeat;
+        background-size: 200px 200px;
+        opacity: 0.4;
+        animation: sparkle 20s linear infinite;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      @keyframes sparkle {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-200px); }
+      }
+
+      /* Glowing sphere background */
+      .cosmic-sphere {
+        position: fixed;
+        bottom: -30%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 800px;
+        height: 800px;
+        background: radial-gradient(circle at 30% 30%, rgba(100, 150, 255, 0.15), rgba(50, 100, 200, 0.05), transparent 70%);
+        border-radius: 50%;
+        filter: blur(60px);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* Glass morphism effect */
+      .glass {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      /* Glow effect */
+      .glow {
+        box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+      }
+
+      .glow-hover:hover {
+        box-shadow: 0 0 30px rgba(255, 107, 53, 0.5);
+      }
+
+      /* Custom scrollbar */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      /* Select dropdown styling */
+      select option {
+        background: #0a0e27;
+        color: white;
+      }
+
+      select:focus {
+        outline: none;
+      }
+    </style>
   <script type="importmap">
 {
   "imports": {
@@ -41,7 +139,8 @@
 }
 </script>
 </head>
-  <body class="bg-base-200 dark:bg-dark-base-200">
+  <body>
+    <div class="cosmic-sphere"></div>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

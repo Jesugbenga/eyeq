@@ -16,11 +16,11 @@ interface ControlsProps {
 }
 
 const statusConfig = {
-    [Status.IDLE]: { text: 'Ready to start', color: 'text-gray-500 dark:text-gray-400' },
-    [Status.LISTENING]: { text: 'Listening...', color: 'text-blue-500' },
-    [Status.ANALYZING]: { text: 'Analyzing...', color: 'text-purple-500' },
-    [Status.SPEAKING]: { text: 'Speaking...', color: 'text-green-500' },
-    [Status.ERROR]: { text: 'An error occurred', color: 'text-red-500' },
+    [Status.IDLE]: { text: 'Ready', color: 'text-gray-400' },
+    [Status.LISTENING]: { text: 'Listening', color: 'text-blue-400' },
+    [Status.ANALYZING]: { text: 'Analyzing', color: 'text-purple-400' },
+    [Status.SPEAKING]: { text: 'Speaking', color: 'text-green-400' },
+    [Status.ERROR]: { text: 'Error', color: 'text-red-400' },
 };
 
 export const Controls: React.FC<ControlsProps> = ({
@@ -34,62 +34,59 @@ export const Controls: React.FC<ControlsProps> = ({
   status,
 }) => {
   return (
-    <div className="bg-base-100 dark:bg-dark-base-300 p-6 rounded-2xl shadow-lg space-y-6 sticky top-8">
-      <div>
-        <h2 className="text-xl font-bold mb-4">Configuration</h2>
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="event-type" className="block text-sm font-medium text-base-content-secondary dark:text-dark-base-content-secondary mb-1">
-              Event Type
-            </label>
-            <select
-              id="event-type"
-              value={eventType}
-              onChange={(e) => setEventType(e.target.value as EventType)}
-              disabled={isProcessing}
-              className="w-full bg-base-200 dark:bg-dark-base-200 border border-base-300 dark:border-dark-base-100 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-primary focus:border-brand-primary disabled:opacity-50"
-            >
-              {EVENT_TYPE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="detail-level" className="block text-sm font-medium text-base-content-secondary dark:text-dark-base-content-secondary mb-1">
-              Description Detail
-            </label>
-            <select
-              id="detail-level"
-              value={detailLevel}
-              onChange={(e) => setDetailLevel(e.target.value as DetailLevel)}
-              disabled={isProcessing}
-              className="w-full bg-base-200 dark:bg-dark-base-200 border border-base-300 dark:border-dark-base-100 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-primary focus:border-brand-primary disabled:opacity-50"
-            >
-              {DETAIL_LEVEL_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
+    <div className="relative z-10 glass rounded-2xl p-8 space-y-8">
+      <div className="space-y-6">
+        <div>
+          <label htmlFor="event-type" className="block text-sm font-medium text-gray-400 mb-3">
+            Event Type
+          </label>
+          <select
+            id="event-type"
+            value={eventType}
+            onChange={(e) => setEventType(e.target.value as EventType)}
+            disabled={isProcessing}
+            className="w-full glass rounded-xl p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-glow-orange/50 disabled:opacity-50 transition-all"
+          >
+            {EVENT_TYPE_OPTIONS.map((option) => (
+              <option key={option} value={option} className="bg-cosmic-dark">
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="detail-level" className="block text-sm font-medium text-gray-400 mb-3">
+            Detail Level
+          </label>
+          <select
+            id="detail-level"
+            value={detailLevel}
+            onChange={(e) => setDetailLevel(e.target.value as DetailLevel)}
+            disabled={isProcessing}
+            className="w-full glass rounded-xl p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-glow-orange/50 disabled:opacity-50 transition-all"
+          >
+            {DETAIL_LEVEL_OPTIONS.map((option) => (
+              <option key={option} value={option} className="bg-cosmic-dark">
+                {option}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
       
-      <div className="border-t border-base-300 dark:border-dark-base-100 pt-6">
-        <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold">Status</h3>
+      <div className="space-y-4 pt-6 border-t border-white/10">
+        <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-400">Status</span>
             <div className="flex items-center space-x-2">
-                {isProcessing && <ProcessingIcon className="h-5 w-5 animate-spin text-brand-primary" />}
-                <span className={`font-semibold ${statusConfig[status].color}`}>{statusConfig[status].text}</span>
+                {isProcessing && <ProcessingIcon className="h-4 w-4 animate-spin text-glow-orange" />}
+                <span className={`text-sm font-medium ${statusConfig[status].color}`}>{statusConfig[status].text}</span>
             </div>
         </div>
         
         {!isProcessing ? (
           <button
             onClick={startProcessing}
-            className="w-full flex items-center justify-center bg-brand-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary transition-all duration-200 shadow-md"
+            className="w-full flex items-center justify-center bg-gradient-to-r from-glow-orange to-glow-orange-dark text-white font-semibold py-3.5 px-6 rounded-xl hover:from-glow-orange-dark hover:to-glow-orange focus:outline-none focus:ring-2 focus:ring-glow-orange/50 transition-all duration-200 glow-hover"
             aria-label="Start processing audio"
           >
             <MicrophoneIcon className="h-5 w-5 mr-2" />
@@ -98,7 +95,7 @@ export const Controls: React.FC<ControlsProps> = ({
         ) : (
           <button
             onClick={stopProcessing}
-            className="w-full flex items-center justify-center bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 shadow-md"
+            className="w-full flex items-center justify-center bg-red-500/20 border border-red-500/50 text-red-400 font-semibold py-3.5 px-6 rounded-xl hover:bg-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500/50 transition-all duration-200"
             aria-label="Stop processing audio"
           >
             <StopIcon className="h-5 w-5 mr-2" />
