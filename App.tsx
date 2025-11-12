@@ -63,6 +63,10 @@ const App: React.FC = () => {
   const lastTranscriptSegment = useRef<string>("");
   const isProcessingRef = useRef<boolean>(false);
   const restartTimerRef = useRef<number | null>(null);
+  const analysisTimerRef = useRef<number | null>(null);
+  const accumulatedTranscriptRef = useRef<string>("");
+  const interimIndexRef = useRef<number>(-1);
+  const isAnalyzingRef = useRef<boolean>(false);
 
   useEffect(() => {
     isProcessingRef.current = isProcessing;
@@ -93,24 +97,61 @@ const App: React.FC = () => {
 
   const analyzeTranscriptSegment = useCallback(async (segment: string) => {
     if (segment.trim().length < 5) return; // Avoid analyzing very short segments
+    
+    // Prevent concurrent analysis requests
+    if (isAnalyzingRef.current) {
+      console.log("Analysis already in progress, skipping this segment");
+      return;
+    }
+    
+    isAnalyzingRef.current = true;
     setStatus(Status.ANALYZING);
     try {
       const description = await generateDescription(segment, eventType, detailLevel);
       speakDescription(description);
+      
+      // After analysis completes, check if there's more accumulated transcript to analyze
+      // Wait a bit before checking to avoid immediate re-analysis
+      setTimeout(() => {
+        if (accumulatedTranscriptRef.current.trim() && isProcessingRef.current && !isAnalyzingRef.current) {
+          const textToAnalyze = accumulatedTranscriptRef.current.trim();
+          accumulatedTranscriptRef.current = "";
+          // Recursively call analyzeTranscriptSegment for queued transcript
+          analyzeTranscriptSegment(textToAnalyze);
+        }
+      }, 1000);
     } catch (error) {
       console.error("Error generating description:", error);
       setStatus(Status.ERROR);
       setTranscript(prev => [...prev, { type: 'error', text: 'Failed to generate description.' }]);
-      setTimeout(() => { if (isProcessingRef.current) setStatus(Status.LISTENING); }, 2000);
+      setTimeout(() => { 
+        if (isProcessingRef.current) {
+          setStatus(Status.LISTENING);
+          // Also check for queued transcripts after error recovery
+          if (accumulatedTranscriptRef.current.trim() && !isAnalyzingRef.current) {
+            const textToAnalyze = accumulatedTranscriptRef.current.trim();
+            accumulatedTranscriptRef.current = "";
+            analyzeTranscriptSegment(textToAnalyze);
+          }
+        }
+      }, 2000);
+    } finally {
+      isAnalyzingRef.current = false;
     }
   }, [eventType, detailLevel]);
 
 
   const stopProcessing = useCallback(() => {
+    // Clear all timers
     if (restartTimerRef.current) {
         clearTimeout(restartTimerRef.current);
         restartTimerRef.current = null;
     }
+    if (analysisTimerRef.current) {
+        clearTimeout(analysisTimerRef.current);
+        analysisTimerRef.current = null;
+    }
+    
     if (recognitionRef.current) {
       // Prevent the onend handler from restarting the service
       recognitionRef.current.onend = null;
@@ -124,11 +165,12 @@ const App: React.FC = () => {
     window.speechSynthesis.cancel();
     setIsProcessing(false);
     setStatus(Status.IDLE);
-    if(lastTranscriptSegment.current) {
-        analyzeTranscriptSegment(lastTranscriptSegment.current);
-        lastTranscriptSegment.current = "";
-    }
-  }, [analyzeTranscriptSegment]);
+    
+    // Clear accumulated transcripts without analyzing
+    accumulatedTranscriptRef.current = "";
+    lastTranscriptSegment.current = "";
+    isAnalyzingRef.current = false;
+  }, []);
 
   const startRecognition = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -136,20 +178,92 @@ const App: React.FC = () => {
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
-    recognition.interimResults = true;
+    recognition.interimResults = true; // Enable interim results for real-time display
     recognition.lang = 'en-US';
 
     recognition.onresult = (event) => {
       let finalTranscript = '';
+      let interimTranscript = '';
+      let hasFinal = false;
+      let hasInterim = false;
+      
+      // Process all results (both final and interim)
       for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript + ' ';
+          hasFinal = true;
+        } else {
+          interimTranscript += result[0].transcript + ' ';
+          hasInterim = true;
         }
       }
-      if (finalTranscript) {
-        setTranscript(prev => [...prev, { type: 'transcript', text: finalTranscript }]);
-        lastTranscriptSegment.current = finalTranscript;
-        analyzeTranscriptSegment(finalTranscript);
+      
+      // Handle final transcripts - remove interim (don't show final transcript)
+      if (hasFinal && finalTranscript.trim()) {
+        const cleanedTranscript = finalTranscript.trim();
+        
+        // Remove interim result (don't add final transcript to display)
+        setTranscript(prev => {
+          // Remove interim result
+          const filtered = prev.filter((_, idx) => idx !== interimIndexRef.current);
+          interimIndexRef.current = -1;
+          return filtered;
+        });
+        
+        // Add to accumulated transcript for analysis (but don't display it)
+        accumulatedTranscriptRef.current += (accumulatedTranscriptRef.current ? ' ' : '') + cleanedTranscript;
+        lastTranscriptSegment.current = accumulatedTranscriptRef.current;
+        
+        // Clear any existing timer
+        if (analysisTimerRef.current) {
+          clearTimeout(analysisTimerRef.current);
+          analysisTimerRef.current = null;
+        }
+        
+        // Set a new timer to analyze after a delay (2 seconds of silence)
+        // This allows the user to continue speaking without interruption
+        // Only schedule analysis if not already analyzing
+        analysisTimerRef.current = window.setTimeout(() => {
+          if (accumulatedTranscriptRef.current.trim() && isProcessingRef.current && !isAnalyzingRef.current) {
+            const textToAnalyze = accumulatedTranscriptRef.current.trim();
+            accumulatedTranscriptRef.current = ""; // Clear after scheduling analysis
+            analyzeTranscriptSegment(textToAnalyze);
+          } else if (isAnalyzingRef.current) {
+            // If analysis is in progress, keep the accumulated transcript for later
+            console.log("Analysis in progress, keeping transcript for later analysis");
+          }
+          analysisTimerRef.current = null;
+        }, 2000); // Wait 2 seconds after last speech before analyzing
+      } 
+      // Handle interim results - show while speaking
+      else if (hasInterim && interimTranscript.trim()) {
+        const cleanedInterim = interimTranscript.trim();
+        
+        // Update or add interim transcript
+        setTranscript(prev => {
+          // If we have an interim item, update it in-place
+          if (interimIndexRef.current >= 0 && interimIndexRef.current < prev.length) {
+            const newTranscript = [...prev];
+            newTranscript[interimIndexRef.current] = { type: 'interim', text: cleanedInterim };
+            return newTranscript;
+          }
+          
+          // No interim item exists, add new one at the end
+          const newIndex = prev.length;
+          interimIndexRef.current = newIndex;
+          return [...prev, { type: 'interim', text: cleanedInterim }];
+        });
+      }
+      // No interim and no final - clear interim display if it exists
+      else if (!hasInterim && !hasFinal) {
+        if (interimIndexRef.current >= 0) {
+          setTranscript(prev => {
+            const filtered = prev.filter((_, idx) => idx !== interimIndexRef.current);
+            interimIndexRef.current = -1;
+            return filtered;
+          });
+        }
       }
     };
 
@@ -187,6 +301,10 @@ const App: React.FC = () => {
     setTranscript([]);
     setIsProcessing(true);
     setStatus(Status.LISTENING);
+    // Reset accumulated transcript when starting
+    accumulatedTranscriptRef.current = "";
+    lastTranscriptSegment.current = "";
+    interimIndexRef.current = -1;
 
     try {
       audioStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -235,7 +353,7 @@ const App: React.FC = () => {
             />
           </div>
           <div className="lg:col-span-2">
-            <TranscriptDisplay transcript={transcript} />
+            <TranscriptDisplay transcript={transcript} status={status} />
           </div>
         </div>
       </main>

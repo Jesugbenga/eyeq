@@ -14,7 +14,7 @@ export enum DetailLevel {
 }
 
 export interface TranscriptItem {
-  type: 'transcript' | 'description' | 'error';
+  type: 'transcript' | 'description' | 'error' | 'interim';
   text: string;
 }
 

@@ -1,10 +1,11 @@
 
 import React, { useRef, useEffect } from 'react';
-import { TranscriptItem } from '../types';
+import { TranscriptItem, Status } from '../types';
 import { UserIcon, SparklesIcon } from './Icon';
 
 interface TranscriptDisplayProps {
   transcript: TranscriptItem[];
+  status?: Status;
 }
 
 const TranscriptItemView: React.FC<{ item: TranscriptItem }> = ({ item }) => {
@@ -50,12 +51,33 @@ const TranscriptItemView: React.FC<{ item: TranscriptItem }> = ({ item }) => {
 };
 
 
-export const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({ transcript }) => {
+const ThinkingIndicator: React.FC = () => {
+    return (
+        <div className="flex items-start space-x-3 my-3 justify-start">
+            <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-glow-orange to-glow-orange-dark animate-pulse">
+                <SparklesIcon className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1 p-3 rounded-xl max-w-2xl glass border border-glow-orange/20">
+                <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-glow-orange rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="w-2 h-2 bg-glow-orange rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                        <div className="w-2 h-2 bg-glow-orange rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                    <p className="text-sm text-gray-400 italic">Analyzing transcript...</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({ transcript, status }) => {
     const endOfMessagesRef = useRef<HTMLDivElement>(null);
+    const isAnalyzing = status === Status.ANALYZING;
 
     useEffect(() => {
         endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [transcript]);
+    }, [transcript, isAnalyzing]);
 
     return (
         <div className="relative z-10 glass rounded-2xl p-6 h-[calc(100vh-12rem)] flex flex-col">
@@ -68,7 +90,7 @@ export const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({ transcript
                 )}
             </div>
             <div className="flex-grow overflow-y-auto pr-2 custom-scrollbar">
-                {transcript.length === 0 ? (
+                {transcript.length === 0 && !isAnalyzing ? (
                     <div className="flex items-center justify-center h-full">
                         <div className="text-center">
                             <div className="w-16 h-16 mx-auto mb-4 glass rounded-full flex items-center justify-center border border-white/10">
@@ -84,6 +106,7 @@ export const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({ transcript
                         {transcript.map((item, index) => (
                             <TranscriptItemView key={index} item={item} />
                         ))}
+                        {isAnalyzing && <ThinkingIndicator />}
                     </div>
                 )}
                 <div ref={endOfMessagesRef} />
